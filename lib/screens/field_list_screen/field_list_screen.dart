@@ -253,7 +253,7 @@ class _FieldListScreenState extends State<FieldListScreen> {
                                 color: Colors.brown),
                             value: selectedVillageId,
                             hint: const Text(
-                              'ग्रामपंचायत निवडा',
+                              'ठिकाण निवडा',
                               style:
                                   TextStyle(fontSize: 16, color: Colors.black),
                             ),
@@ -298,7 +298,7 @@ class _FieldListScreenState extends State<FieldListScreen> {
                       );
                     } else if (selectedVillageId == null) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text("कृपया ग्रामपंचायत निवडा")),
+                        SnackBar(content: Text("कृपया ठिकाण निवडा")),
                       );
                     } else {
                       Navigator.push(
