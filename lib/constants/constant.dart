@@ -1,5 +1,5 @@
 class Constant {
-  static const baseurl = "http://fieldvisit.sitsolutions.co.in/";
+  static const baseurl = "https://mypunezpvisit.in/";
   static const login = "${baseurl}do_login";
   static const talukaList = "${baseurl}taluka_list";
   static const officeType = "${baseurl}office_type_list";
@@ -12,4 +12,5 @@ class Constant {
   static const commentNotificationList = "${baseurl}comment_notification_list";
   static const formDetails = "${baseurl}view_form_details";
   static const markAsReadNotification = "${baseurl}mark_as_read";
+  static const updateFcmToken = "${baseurl}token_update";
 }

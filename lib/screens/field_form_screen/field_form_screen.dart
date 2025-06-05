@@ -31,6 +31,7 @@ class _FieldFormScreenState extends State<FieldFormScreen> {
   List<FormFieldModel> formFields = [];
   Map<String, dynamic> formValues = {};
   bool isPriorityChecked = false;
+  bool isSubmitting = false;
 
   @override
   void initState() {
@@ -153,13 +154,29 @@ class _FieldFormScreenState extends State<FieldFormScreen> {
           margin: const EdgeInsets.symmetric(vertical: 8),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: TextFormField(
-              decoration: InputDecoration(
-                labelText: field.required ? "${field.label} *" : field.label,
-                border: const OutlineInputBorder(),
-              ),
-              maxLines: 2,
-              onChanged: (value) => formValues[field.id] = value,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  field.required ? "${field.label} *" : field.label,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextFormField(
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    isDense: true,
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                  ),
+                  maxLines: 4, // More space for textarea
+                  onChanged: (value) => formValues[field.id] = value,
+                ),
+              ],
             ),
           ),
         );
@@ -247,6 +264,7 @@ class _FieldFormScreenState extends State<FieldFormScreen> {
                 ElevatedButton(
                   onPressed: () async {
                     await showModalBottomSheet(
+                      backgroundColor: Colors.white,
                       context: context,
                       builder: (context) => SafeArea(
                         child: Wrap(
@@ -278,7 +296,7 @@ class _FieldFormScreenState extends State<FieldFormScreen> {
                                     'jpg',
                                     'jpeg',
                                     'png',
-                                    'pdf'
+                                    // 'pdf'
                                   ],
                                 );
 
@@ -403,10 +421,15 @@ class _FieldFormScreenState extends State<FieldFormScreen> {
   }
 
   void handleSubmit() async {
+    if (isSubmitting) return;
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String userId = prefs.getString("userid")!;
     print("*********************userid while submitting form $userId");
     bool hasError = false;
+
+    setState(() {
+      isSubmitting = true;
+    });
 
     for (var field in formFields) {
       final value = formValues[field.id];
@@ -431,7 +454,12 @@ class _FieldFormScreenState extends State<FieldFormScreen> {
       }
     }
 
-    if (hasError) return;
+    if (hasError) {
+      setState(() {
+        isSubmitting = false;
+      });
+      return;
+    }
 
     // Build answer map
     Map<String, dynamic> answer = {};
@@ -504,6 +532,10 @@ class _FieldFormScreenState extends State<FieldFormScreen> {
       if (kDebugMode) {
         print("Exception during submission: $e");
       }
+    } finally {
+      setState(() {
+        isSubmitting = false;
+      });
     }
   }
 
@@ -561,25 +593,27 @@ class _FieldFormScreenState extends State<FieldFormScreen> {
                     ]),
                   ),
                   const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: handleSubmit,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: ColorConstants.orange,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    child: const Center(
-                      child: Text(
-                        "सबमिट करा",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
+                  isSubmitting
+                      ? const CircularProgressIndicator()
+                      : ElevatedButton(
+                          onPressed: handleSubmit,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: ColorConstants.orange,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          child: const Center(
+                            child: Text(
+                              "सबमिट करा",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                  ),
                 ],
               ),
       ),

@@ -506,4 +506,32 @@ class Auth {
     }
     return false;
   }
+
+  static void sendTokenToBackend(String? fcmtoken) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String userId = prefs.getString("userid")!;
+    final fcmToken = await NotificationService.instance.getFcmToken();
+    print("**********************fcm token while logging $fcmToken");
+    if (fcmtoken != null) {
+      final response = await http.post(
+        Uri.parse(Constant.updateFcmToken),
+        headers: <String, String>{'Content-Type': 'application/json'},
+        body: jsonEncode(
+          <String, dynamic>{"user_id": userId, "token": fcmToken},
+        ),
+      );
+
+      if (response.statusCode == 200) {
+        final jsonresponse = jsonDecode(response.body);
+        if (kDebugMode) {
+          print("jsonresponse: $jsonresponse");
+        }
+        if (jsonresponse['status'] == "success") {
+          print("Token updated successfully");
+        }
+      } else {
+        print("Failed to update token");
+      }
+    }
+  }
 }

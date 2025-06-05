@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:field_visit/auth/auth.dart';
 import 'package:field_visit/constants/color_constants.dart';
+import 'package:field_visit/models/comment_notification.dart';
 import 'package:field_visit/screens/field_list_screen/field_list_screen.dart';
 import 'package:field_visit/screens/notification_screen/notification_screen.dart';
 import 'package:field_visit/screens/taluka_list_screen/taluka_list_screen.dart';
@@ -24,12 +25,28 @@ class _HomeScreenState extends State<HomeScreen> {
   String currentYearVisit = "0";
   bool isLoading = true;
   Timer? _acceptOrderPollingTimer;
+  int notificationcount = 0;
 
   @override
   void initState() {
     super.initState();
     _loadUserData();
     _loadDashboardVisitCount();
+    fetchNotifications();
+  }
+
+  Future<void> fetchNotifications() async {
+    try {
+      // final authProvider = Provider.of<Auth>(context, listen: false);
+      final result = await Auth.fetchCommentNotificationList();
+      setState(() {
+        notificationcount = result.length;
+        isLoading = false;
+      });
+    } catch (e) {
+      print("Error fetching notifications: $e");
+      setState(() => isLoading = false);
+    }
   }
 
   @override
@@ -54,6 +71,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _acceptOrderPollingTimer =
         Timer.periodic(const Duration(seconds: 10), (timer) {
       _loadDashboardVisitCount();
+      fetchNotifications();
     });
   }
 
@@ -128,40 +146,69 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ],
                       ),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.rectangle,
-                          borderRadius: BorderRadius.circular(5),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black26,
-                              blurRadius: 4,
-                              offset: Offset(0, 2),
+                      Stack(
+                        children: [
+                          Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.rectangle,
+                              borderRadius: BorderRadius.circular(5),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black26,
+                                  blurRadius: 4,
+                                  offset: Offset(0, 2),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                        // padding: const EdgeInsets.all(2),
-                        child: IconButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              PageTransition(
-                                type: PageTransitionType.rightToLeft,
-                                duration: const Duration(milliseconds: 200),
-                                reverseDuration:
-                                    const Duration(milliseconds: 200),
-                                child: const NotificationScreen(),
+                            child: IconButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  PageTransition(
+                                    type: PageTransitionType.rightToLeft,
+                                    duration: const Duration(milliseconds: 200),
+                                    reverseDuration:
+                                        const Duration(milliseconds: 200),
+                                    child: const NotificationScreen(),
+                                  ),
+                                );
+                              },
+                              icon: const Icon(
+                                Icons.notifications,
+                                color: Colors.orange,
+                                size: 32,
                               ),
-                            );
-                          },
-                          icon: const Icon(
-                            Icons.notifications,
-                            color: Colors.orange, // You can change this color
-                            size: 32,
+                            ),
                           ),
-                        ),
-                      ),
+                          // Badge
+                          if (notificationcount > 0)
+                            Positioned(
+                              right: 4,
+                              top: 4,
+                              child: Container(
+                                padding: const EdgeInsets.all(2),
+                                decoration: BoxDecoration(
+                                  color: Colors.red,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                constraints: const BoxConstraints(
+                                  minWidth: 18,
+                                  minHeight: 18,
+                                ),
+                                child: Text(
+                                  "$notificationcount", // Replace this with your dynamic count
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ),
+                        ],
+                      )
                     ],
                   ),
 
@@ -220,18 +267,42 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(height: 24),
 
                   // Visit Stats
-                  Row(
+                  // Row(
+                  //   children: [
+                  //     _buildStatCardtarget(
+                  //       count: currentYearVisit,
+                  //       target: "30",
+                  //       labelTop: "अचिव्ह / टार्गेट",
+                  //       labelBottom:
+                  //           "चालू आर्थिक वर्षात \nकेलेल्या क्षेत्रीय भेटी",
+                  //       circleColor: Colors.pink,
+                  //     ),
+                  //     const SizedBox(width: 16),
+                  //     _buildStatCard(
+                  //       count: totalVisit,
+                  //       label: "आतापर्यंत केलेल्या\nक्षेत्रीय भेटी",
+                  //       color: ColorConstants.orange,
+                  //     ),
+                  //   ],
+                  // ),
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 12,
                     children: [
-                      _buildStatCard(
+                      _buildResponsiveStatCardtarget(
                         count: currentYearVisit,
-                        label: "चालू आर्थिक वर्ष\nकेलेल्या क्षेत्रीय भेटी",
-                        color: Colors.pink[100]!,
+                        target: "30",
+                        labelTop: "अचिव्ह / टार्गेट",
+                        labelBottom:
+                            "चालू आर्थिक वर्षात \nकेलेल्या क्षेत्रीय भेटी",
+                        circleColor: Colors.pink,
+                        width: (screenWidth - 44) / 2, // responsive width
                       ),
-                      const SizedBox(width: 16),
-                      _buildStatCard(
+                      _buildResponsiveStatCard(
                         count: totalVisit,
                         label: "आतापर्यंत केलेल्या\nक्षेत्रीय भेटी",
                         color: ColorConstants.orange,
+                        width: (screenWidth - 44) / 2,
                       ),
                     ],
                   ),
@@ -354,6 +425,184 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildStatCardtarget({
+    required String count,
+    required String target,
+    required String labelTop,
+    required String labelBottom,
+    required Color circleColor,
+  }) {
+    return Expanded(
+      child: Container(
+        // width: 130, // Fixed width as per design ratio
+        padding: const EdgeInsets.all(12),
+        margin: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: const [
+            BoxShadow(
+              color: Colors.black26,
+              blurRadius: 4,
+              offset: Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              labelTop,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Colors.brown,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: circleColor.withOpacity(0.2),
+                shape: BoxShape.circle,
+              ),
+              child: Text(
+                "$count/$target",
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: circleColor,
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              labelBottom,
+              style: const TextStyle(
+                fontSize: 13,
+                color: Colors.brown,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildResponsiveStatCard({
+    required String count,
+    required String label,
+    required Color color,
+    required double width,
+  }) {
+    return Container(
+      width: width,
+      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black26,
+            blurRadius: 4,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: color,
+              shape: BoxShape.circle,
+            ),
+            child: Text(
+              count,
+              style: const TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            label,
+            style: const TextStyle(fontSize: 14),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildResponsiveStatCardtarget({
+    required String count,
+    required String target,
+    required String labelTop,
+    required String labelBottom,
+    required Color circleColor,
+    required double width,
+  }) {
+    return Container(
+      width: width,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black26,
+            blurRadius: 4,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            labelTop,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: Colors.brown,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: circleColor.withOpacity(0.2),
+              shape: BoxShape.circle,
+            ),
+            child: Text(
+              "$count/$target",
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: circleColor,
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            labelBottom,
+            style: const TextStyle(
+              fontSize: 13,
+              color: Colors.brown,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
       ),
     );
   }

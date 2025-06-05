@@ -412,10 +412,21 @@ class _FormDetailsScreenState extends State<FormDetailsScreen> {
                       height: 160,
                       fit: BoxFit.cover,
                       loadingBuilder: (context, child, loadingProgress) {
-                        if (loadingProgress == null) return child;
-                        return const Center(
-                            child:
-                                CircularProgressIndicator()); // Show loader while image is loading
+                        if (loadingProgress == null) {
+                          return child; // Image fully loaded
+                        }
+                        return Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Center(
+                            child: CircularProgressIndicator(
+                              color: Colors.blue,
+                              value: loadingProgress.expectedTotalBytes != null
+                                  ? loadingProgress.cumulativeBytesLoaded /
+                                      (loadingProgress.expectedTotalBytes ?? 1)
+                                  : null,
+                            ),
+                          ),
+                        ); // Show loading indicator
                       },
                       errorBuilder: (context, error, stackTrace) {
                         return const Center(

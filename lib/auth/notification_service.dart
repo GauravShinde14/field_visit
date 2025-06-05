@@ -209,6 +209,7 @@
 //   }
 // }
 
+import 'package:field_visit/auth/auth.dart';
 import 'package:field_visit/screens/notification_screen/notification_screen.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
@@ -239,6 +240,7 @@ class NotificationService {
 
     final fcmtoken = await _messaging.getToken();
     print("FCM Token: $fcmtoken");
+    Auth.sendTokenToBackend(fcmtoken);
   }
 
   Future<String?> getFcmToken() async {

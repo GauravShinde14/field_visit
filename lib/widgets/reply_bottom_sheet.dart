@@ -23,8 +23,8 @@ class ReplyBottomSheet extends StatefulWidget {
 class _ReplyBottomSheetState extends State<ReplyBottomSheet> {
   final TextEditingController _replyController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-
   File? _selectedImage;
+  bool isSubmitting = false;
 
   Future<void> _pickImageFromCamera() async {
     final pickedFile =
@@ -53,7 +53,7 @@ class _ReplyBottomSheetState extends State<ReplyBottomSheet> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                "रिप्लायंग टू अधिकारी : ${widget.name}",
+                "अधिकाऱ्याला रिप्लाय देत आहात: ${widget.name}",
                 style: const TextStyle(
                   fontWeight: FontWeight.w600,
                   fontSize: 16,
@@ -111,47 +111,64 @@ class _ReplyBottomSheetState extends State<ReplyBottomSheet> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  ElevatedButton.icon(
-                    onPressed: _pickImageFromCamera,
-                    icon: const Icon(Icons.camera_alt, color: Colors.white),
-                    label: const Text(
-                      'फोटो जोडा',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
+                  Visibility(
+                    visible:
+                        false, // 👈 makes the button invisible but keeps its space
+                    child: ElevatedButton.icon(
+                      onPressed: _pickImageFromCamera,
+                      icon: const Icon(Icons.camera_alt, color: Colors.white),
+                      label: const Text(
+                        'फोटो जोडा',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 18, vertical: 10),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(6),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 18, vertical: 10),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(6),
+                        ),
                       ),
                     ),
                   ),
                   ElevatedButton(
-                    onPressed: () async {
-                      if (_formKey.currentState!.validate()) {
-                        final reply = _replyController.text.trim();
-                        DateTime dateTime = DateTime.now();
-                        print("selected image -------- $_selectedImage");
-                        bool result = await Auth.addremark(
-                          widget.commentId,
-                          reply,
-                          dateTime.toString(),
-                          _selectedImage, // <-- send image file
-                        );
-                        if (result) {
-                          widget.onRemarkAdded();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content: Text("Remark added successfully")),
-                          );
-                          Navigator.pop(context);
-                        }
-                      }
-                    },
+                    onPressed: isSubmitting
+                        ? null
+                        : () async {
+                            if (_formKey.currentState!.validate()) {
+                              setState(() {
+                                isSubmitting = true;
+                              });
+
+                              final reply = _replyController.text.trim();
+                              DateTime dateTime = DateTime.now();
+
+                              bool result = await Auth.addremark(
+                                widget.commentId,
+                                reply,
+                                dateTime.toString(),
+                                _selectedImage,
+                              );
+
+                              setState(() {
+                                isSubmitting = false;
+                              });
+
+                              if (result) {
+                                widget.onRemarkAdded();
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                        "रिमार्क यशस्वीरित्या सबमिट झाला."),
+                                  ),
+                                );
+                                Navigator.pop(context);
+                              }
+                            }
+                          },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.orange,
                       padding: const EdgeInsets.symmetric(
@@ -159,13 +176,22 @@ class _ReplyBottomSheetState extends State<ReplyBottomSheet> {
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(6)),
                     ),
-                    child: const Text(
-                      'सबमिट',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    child: isSubmitting
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Text(
+                            'सबमिट',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                   ),
                 ],
               ),
