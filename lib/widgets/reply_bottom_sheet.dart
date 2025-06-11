@@ -112,8 +112,7 @@ class _ReplyBottomSheetState extends State<ReplyBottomSheet> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Visibility(
-                    visible:
-                        false, // 👈 makes the button invisible but keeps its space
+                    visible: true,
                     child: ElevatedButton.icon(
                       onPressed: _pickImageFromCamera,
                       icon: const Icon(Icons.camera_alt, color: Colors.white),

@@ -66,7 +66,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _startPollingAcceptOrders() {
-    // _loadDashboardVisitCount();
+    _loadDashboardVisitCount();
+
+    fetchNotifications();
     _acceptOrderPollingTimer?.cancel();
     _acceptOrderPollingTimer =
         Timer.periodic(const Duration(seconds: 10), (timer) {
